@@ -13,9 +13,11 @@ public class DefaultRouteController {
     @GetMapping("/")
     public Map<String, String> index(HttpServletRequest request) {
         String baseUrl = request.getRequestURL().toString();
-        return Map.of("Message:", "Um I think your server is working");
+        return Map.of("Message:", "Um, I think your server is working");
 
     }
+
+
 
 
 }

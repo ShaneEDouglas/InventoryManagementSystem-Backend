@@ -18,6 +18,14 @@ repositories {
 }
 
 dependencies {
+
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    implementation("org.projectlombok:lombok:1.18.36")
+    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson
+    implementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
