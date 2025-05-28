@@ -1,34 +1,17 @@
-package com.example.inventorymangamentsystem.entity;
+package com.example.inventorymangamentsystem.dto;
 
-import jakarta.persistence.*;
+
 import lombok.Data;
-import org.springframework.stereotype.Component;
 
-@Entity
-@Table(name= "users")
 @Data
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected int id;
-
-
+public class RegisterRequest {
     protected String firstName;
     protected String lastName;
     protected String email;
     protected String password;
+    protected String username;
     protected String phoneNumber;
     protected String profilePicture;
-
-    private String authProvider = "local";
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
 
     public String getFirstName() {
@@ -38,7 +21,6 @@ public class User {
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
-
 
     public String getLastName() {
         return lastName;
@@ -56,7 +38,6 @@ public class User {
         this.email = email;
     }
 
-
     public String getPassword() {
         return password;
     }
@@ -64,6 +45,16 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
 
     public String getPhoneNumber() {
         return phoneNumber;
@@ -73,33 +64,11 @@ public class User {
         this.phoneNumber = phoneNumber;
     }
 
-
     public String getProfilePicture() {
         return profilePicture;
     }
 
     public void setProfilePicture(String profilePicture) {
         this.profilePicture = profilePicture;
-    }
-
-    public String getAuthProvider() {
-        return authProvider;
-    }
-
-    public void setAuthProvider(String authProvider) {
-        this.authProvider = authProvider;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", phoneNumber='" + phoneNumber + '\'' +
-                ", profilePicture='" + profilePicture + '\'' +
-                '}';
     }
 }
