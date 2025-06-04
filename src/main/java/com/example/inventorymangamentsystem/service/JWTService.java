@@ -1,16 +1,17 @@
 package com.example.inventorymangamentsystem.service;
 
 
+import com.example.inventorymangamentsystem.entity.UserDetailsPrinciple;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,10 +25,14 @@ public class JWTService {
     @Value("${jwt.secret}") // Similar to env
     private String jwtSecret;
 
+    private String secretkey = "";
+
 
 
     private AuthService authService;
     private AuthenticationManager authenticationManager;
+
+
 
 
     Map<String, Object> claims = new HashMap<>();
@@ -44,21 +49,41 @@ public class JWTService {
                 .compact();
     }
 
-    public Key generateKey() {
+
+    // Extracts the data from the JWT token
+    private Claims extractAllClaims(String token) {
+        return Jwts
+                .parser()
+                .verifyWith(generateKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+
+    // Keys
+    public SecretKey generateKey() {
         return new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256");
+    }
+
+    private SecretKey getKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretkey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
 
     public String extractEmail(String token) {
-
+        return extractAllClaims(token).getSubject();
     }
 
     public String extractID(String token) {
-        final String
+        return extractAllClaims(token).getSubject();
     }
 
 
-    public boolean validateToken(String jwtToken, UserDetails userDetails) {
+    public boolean validateToken(String jwtToken, UserDetailsPrinciple userDetails) {
+        String idorEmail = extractID(jwtToken);
+        return idorEmail.equals(userDetails.getEmail());
 
 
     }

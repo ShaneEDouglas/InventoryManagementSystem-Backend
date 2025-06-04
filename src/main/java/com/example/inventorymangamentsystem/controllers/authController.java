@@ -6,10 +6,8 @@ import com.example.inventorymangamentsystem.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.*;
 import com.example.inventorymangamentsystem.service.AuthService;
 import java.util.Map;
 
@@ -28,22 +26,21 @@ public class authController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(RegisterRequest request) {
+    public ResponseEntity<?> register( @RequestBody RegisterRequest request) {
         try {
-            User user = authService.Register(request);
-
-            
+            return authService.Register(request);
         } catch (RuntimeException e) {
+            System.out.println("Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("Message: ", e.getMessage()));
+
         }
-        return authService.Register(request);;
+
     }
 
-
-
-
-
-
+        @GetMapping("/csrf")
+        public CsrfToken csrf(CsrfToken token) {
+            return token;
+        }
 
 
 }

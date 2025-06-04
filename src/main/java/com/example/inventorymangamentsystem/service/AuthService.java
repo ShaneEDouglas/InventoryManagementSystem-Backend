@@ -23,7 +23,7 @@ public class AuthService {
     private JWTService jwtService;
 
 
-    public AuthService(UserRepo userRepo, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepo userRepo, PasswordEncoder passwordEncoder, JWTService jwtService) {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -54,8 +54,17 @@ public class AuthService {
 
             return ResponseEntity.status(201)
                     .header("Set-Cookie", "token=" + token + "; HttpOnly; Path=/; SameSite=Strict")
-                    .body(Map.of("Message", "user registered succesfully"));
-
+                    .body(Map.of(
+                            "message", "user registered successfully",
+                            "user", Map.of(
+                                    "id", user.getId(),
+                                    "email", user.getEmail(),
+                                    "firstName", user.getFirstName(),
+                                    "lastName", user.getLastName(),
+                                    "phoneNumber", user.getPhoneNumber(),
+                                    "profilePicture", user.getProfilePicture()
+                            )
+                    ));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,15 +78,9 @@ public class AuthService {
     }
 
 
-    public User loadUserByID(String ID) {
-        try {
-            if (userRepo.findUserByID(ID).isPresent()) {
-
-            }
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-        return null;
+    public User loadUserByID(int ID) {
+        return userRepo.findUserByid(ID)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + ID));
     }
 
 
