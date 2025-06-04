@@ -47,12 +47,17 @@ public class SecurityConfig {
     @Profile("prod")
     public SecurityFilterChain prodFilters(HttpSecurity http) throws Exception {
         return http
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**")
+                .authorizeHttpRequests(auth -> auth.requestMatchers(
+                        "/api/auth/**"
+                        )
                         .permitAll()
                         .anyRequest()
                         .authenticated())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepo())
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .addFilterBefore(jwtfilter, UsernamePasswordAuthenticationFilter.class)
 
@@ -68,6 +73,7 @@ public class SecurityConfig {
     }
 
 
+    //Single bcrypt instance
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

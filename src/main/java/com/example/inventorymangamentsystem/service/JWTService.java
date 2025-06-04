@@ -37,11 +37,11 @@ public class JWTService {
 
     Map<String, Object> claims = new HashMap<>();
 
-    public String generateToken(String userID, Map<String, Object> claims) {
+    public String generateToken(int userID, Map<String, Object> claims) {
          return Jwts.builder()
                 .claims()
                 .add(claims)
-                .subject(userID)
+                .subject(String.valueOf(userID))
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + 86400000))
                 .and()
@@ -82,8 +82,8 @@ public class JWTService {
 
 
     public boolean validateToken(String jwtToken, UserDetailsPrinciple userDetails) {
-        String idorEmail = extractID(jwtToken);
-        return idorEmail.equals(userDetails.getEmail());
+        String extractedId = extractID(jwtToken);
+        return extractedId.equals(String.valueOf(userDetails.getEmail()));
 
 
     }

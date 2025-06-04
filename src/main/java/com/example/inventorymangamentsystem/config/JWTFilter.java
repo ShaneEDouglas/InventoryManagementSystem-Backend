@@ -5,6 +5,7 @@ import com.example.inventorymangamentsystem.service.JWTService;
 import com.example.inventorymangamentsystem.service.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,12 +49,14 @@ public class JWTFilter extends OncePerRequestFilter {
         //Don't allow registration/login to get token (Will get it on registration/login)
 
         String path = request.getServletPath();
-        if (path.startsWith("/api/auth")) {
+        if ((path.equals("/api/auth/login") ||
+                path.equals("/api/auth/register") ||
+                path.equals("/api/auth/logout") ||
+                path.equals("/api/auth/csrf"))) {
+
             filterChain.doFilter(request, response);
             return;
         }
-
-
 
 
         String authHeader = request.getHeader("Authorization");
@@ -61,14 +64,39 @@ public class JWTFilter extends OncePerRequestFilter {
         String userID= null;
 
 
+        //Check auth headers and extract the token from the cookie
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             jwtToken = authHeader.substring(7);
-            userID =  jwtService.extractID(jwtToken);
+
+        }
+            // Check the cookie
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals("token")) {
+
+                    jwtToken = cookie.getValue();
+
+                    break;
+                }
+            }
         }
 
-        if (userID != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        // Extract userID from the token
+        if (jwtToken != null) {
+            try {
+                userID = jwtService.extractID(jwtToken);
+                System.out.println("userID: " + userID);
+                System.out.println(jwtToken);
+            } catch (Exception e) {
+                System.out.println("Failed to extract ID from token: " + e.getMessage());
+            }
+        }
 
-            UserDetailsPrinciple userDetails = userDetailsServiceimpl.loadUserById(userID);
+
+
+        if (userID != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            int id = Integer.parseInt(userID);
+            UserDetailsPrinciple userDetails = userDetailsServiceimpl.loadUserById(id);
             if (jwtService.validateToken(jwtToken, userDetails )) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource()

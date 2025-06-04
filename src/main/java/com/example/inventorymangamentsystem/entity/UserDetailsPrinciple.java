@@ -35,6 +35,22 @@ public class UserDetailsPrinciple implements UserDetails {
         return user.getId();
     }
 
+    public String getFirstName() {
+        return user.getFirstName();
+    }
+
+    public String getLastName() {
+        return user.getLastName();
+    }
+
+    public String getProfilePicture() {
+        return user.getProfilePicture();
+    }
+
+    public String getPhoneNumber() {
+        return user.getPhoneNumber();
+    }
+
     @Override
     public String getUsername() {
         return "";
