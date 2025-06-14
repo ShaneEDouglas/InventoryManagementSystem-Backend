@@ -13,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -69,15 +68,15 @@ public class AuthService {
 
             userRepo.save(user);
 
-            String token = jwtService.generateToken(user.getId(), Map.of(
-                    "id", user.getId()));
+            String token = jwtService.generateToken(user.getUserId(), Map.of(
+                    "userId", user.getUserId()));
 
             return ResponseEntity.status(201)
                     .header("Set-Cookie", "token=" + token + "; HttpOnly; Path=/; SameSite=Strict")
                     .body(Map.of(
                             "message", "user registered successfully",
                             "user", Map.of(
-                                    "id", user.getId(),
+                                    "id", user.getUserId(),
                                     "email", user.getEmail(),
                                     "firstName", user.getFirstName(),
                                     "lastName", user.getLastName(),
@@ -138,15 +137,15 @@ public class AuthService {
             }
 
 
-            String token = jwtService.generateToken(existingUser.get().getId(), Map.of(
-                    "id", existingUser.get().getId()));
+            String token = jwtService.generateToken(existingUser.get().getUserId(), Map.of(
+                    "userId", existingUser.get().getUserId()));
 
             return ResponseEntity.status(201)
                     .header("Set-Cookie", "token=" + token + "; HttpOnly; Path=/; SameSite=Strict")
                     .body(Map.of(
                             "message", "user log in successfully",
                             "user", Map.of(
-                                    "id", existingUser.get().getId(),
+                                    "userId", existingUser.get().getUserId(),
                                     "email", existingUser.get().getEmail(),
                                     "firstName", existingUser.get().getFirstName(),
                                     "lastName", existingUser.get().getLastName(),
@@ -166,6 +165,7 @@ public class AuthService {
     // Log out by expiring the token
     public ResponseEntity<Map<String,Object>> Logout() {
         return ResponseEntity.status(200)
+                // Expire the token (set max age to 0)
                 .header("Set-Cookie", "token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict")
                 .body(Map.of(
                         "message", "user logout successful"
@@ -183,7 +183,7 @@ public class AuthService {
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
 
             Map<String, Object> userData = Map.of(
-                    "id", userDetails.getID(),
+                    "userId", userDetails.getUserId(),
                     "firstName", userDetails.getFirstName(),
                     "lastName", userDetails.getLastName(),
                     "email", userDetails.getEmail(),

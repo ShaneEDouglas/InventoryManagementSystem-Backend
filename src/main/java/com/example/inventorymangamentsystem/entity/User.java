@@ -2,7 +2,10 @@ package com.example.inventorymangamentsystem.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.stereotype.Component;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name= "users")
@@ -10,9 +13,7 @@ import org.springframework.stereotype.Component;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected int id;
-
-
+    protected int userId;
     protected String firstName;
     protected String lastName;
     protected String email;
@@ -20,14 +21,64 @@ public class User {
     protected String phoneNumber;
     protected String profilePicture;
 
-    private String authProvider = "local";
 
-    public int getId() {
-        return id;
+    /*
+    creates a separate column that joins with the user_id column
+
+    This also loads users  "eagerly" so spring security can pick up on every load server time
+    This makes sure that roles are loaded alongside the user and allows spring security to see roles on authentication
+    this will also store the enum role as a string in the database
+    * */
+
+    /* Create a separate table for user roles
+    *    - user_id is stored as a foreign key back to user_id in the userid
+    * users table
+    *
+    * - role column holds the name of the enum
+    * */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id")
+    )
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Set<Role> roles = new HashSet<>();
+
+    // Gives a one to many relationship to the products
+    @OneToMany(mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<Product> products;
+
+    public Set<Role> getRoles() {
+        return roles;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
+
+    private String authProvider = "local";
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
 
@@ -93,7 +144,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "id=" + id +
+                "id=" + userId +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +

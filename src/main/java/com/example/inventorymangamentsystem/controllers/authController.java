@@ -64,7 +64,6 @@ public class authController {
     @GetMapping("/me")
     public ResponseEntity<Map<String,Object>> getMe(Authentication authentication) {
         try {
-
             return authService.getMe(authentication);
         } catch (RuntimeException e) {
             System.out.println("Error: " + e.getMessage());

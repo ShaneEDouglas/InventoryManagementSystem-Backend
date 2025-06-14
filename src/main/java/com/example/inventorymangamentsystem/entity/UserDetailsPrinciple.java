@@ -6,7 +6,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 public class UserDetailsPrinciple implements UserDetails {
 
@@ -31,8 +30,8 @@ public class UserDetailsPrinciple implements UserDetails {
         return user.getEmail();
     }
 
-    public int getID() {
-        return user.getId();
+    public int getUserId() {
+        return user.getUserId();
     }
 
     public String getFirstName() {

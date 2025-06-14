@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.4.5"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.flywaydb.flyway") version "10.20.1"
 }
 
 group = "com.example"
@@ -57,4 +58,14 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+
+flyway {
+    url      = "jdbc:postgresql://localhost:5432/inventorydb"
+    user     = "postgres"
+    password = "newpassword123"
+    driver   = "org.postgresql.Driver"
+    // (optional) Automatically clean if validation fails:
+    cleanOnValidationError = true
 }

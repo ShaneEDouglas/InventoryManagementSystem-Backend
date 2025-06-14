@@ -78,13 +78,13 @@ public class JWTService {
 
     public String extractID(String token) {
         Claims claims = extractAllClaims(token);
-        return claims.get("id").toString();
+        return claims.get("userId").toString();
     }
 
 
     public boolean validateToken(String jwtToken, UserDetailsPrinciple userDetails) {
         String extractedId = extractID(jwtToken);
-        return extractedId.equals(String.valueOf(userDetails.getID()));
+        return extractedId.equals(String.valueOf(userDetails.getUserId()));
 
     }
 }
