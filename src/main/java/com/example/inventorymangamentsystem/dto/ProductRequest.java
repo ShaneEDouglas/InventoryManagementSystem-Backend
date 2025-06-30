@@ -1,34 +1,11 @@
-package com.example.inventorymangamentsystem.entity;
+package com.example.inventorymangamentsystem.dto;
 
-import jakarta.persistence.*;
-import lombok.Data;
-
-
-@Entity
-@Table(name= "products")
-@Data
-public class Product {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    protected int productId;
+public class ProductRequest {
     protected String productName;
     protected String productDescription;
     protected double productPrice;
     protected int productQuantity;
     protected String productCategory;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id",nullable = false )
-    public User user;
-
-    public int getProductId() {
-        return productId;
-    }
-
-    public void setProductId(int productId) {
-        this.productId = productId;
-    }
 
     public String getProductName() {
         return productName;
@@ -68,13 +45,5 @@ public class Product {
 
     public void setProductCategory(String productCategory) {
         this.productCategory = productCategory;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 }

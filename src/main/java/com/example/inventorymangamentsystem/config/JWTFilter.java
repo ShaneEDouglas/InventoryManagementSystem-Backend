@@ -98,6 +98,7 @@ public class JWTFilter extends OncePerRequestFilter {
             int id = Integer.parseInt(userID);
             UserDetailsPrinciple userDetails = userDetailsServiceimpl.loadUserById(id);
             if (jwtService.validateToken(jwtToken, userDetails )) {
+                // Validates the token, sets the custom userdetails (userdetails principle) into the authentication contenxt
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource()
                         .buildDetails(request));
