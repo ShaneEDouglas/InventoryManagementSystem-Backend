@@ -1,5 +1,8 @@
 package com.example.inventorymangamentsystem.dto;
 
+import lombok.Data;
+
+@Data
 public class ProductRequest {
     protected String productName;
     protected String productDescription;

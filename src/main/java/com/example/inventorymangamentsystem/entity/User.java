@@ -21,8 +21,13 @@ public class User {
     protected String phoneNumber;
     protected String profilePicture;
 
+    @ManyToOne
+    @JoinColumn(name = "company_id",nullable = false)
+    protected Company company;
 
-    /*
+
+
+/*
     creates a separate column that joins with the user_id column
 
     This also loads users  "eagerly" so spring security can pick up on every load server time
@@ -141,16 +146,29 @@ public class User {
         this.authProvider = authProvider;
     }
 
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
+    }
+
     @Override
     public String toString() {
         return "User{" +
-                "id=" + userId +
+                "userId=" + userId +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", profilePicture='" + profilePicture + '\'' +
+                ", company=" + company +
+                ", roles=" + roles +
+                ", products=" + products +
+                ", authProvider='" + authProvider + '\'' +
                 '}';
     }
 }

@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 
-
+@Data
 public class RegisterRequest {
     protected String firstName;
     protected String lastName;

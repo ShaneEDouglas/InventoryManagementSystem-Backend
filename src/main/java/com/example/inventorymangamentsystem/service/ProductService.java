@@ -51,9 +51,7 @@ public class ProductService {
                             "ProductPrice", product.getProductPrice(),
                             "UserId",product.getUser().getUserId()
                     )
-
             ));
-
         }
         catch (Exception e) {
             e.printStackTrace();
