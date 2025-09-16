@@ -2,6 +2,7 @@ package com.example.inventorymangamentsystem.service;
 
 import com.example.inventorymangamentsystem.dto.ProductRequest;
 import com.example.inventorymangamentsystem.entity.Product;
+import com.example.inventorymangamentsystem.entity.User;
 import com.example.inventorymangamentsystem.entity.UserDetailsPrinciple;
 import com.example.inventorymangamentsystem.repository.ProductRepo;
 import lombok.Data;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -28,6 +30,7 @@ public class ProductService {
         try {
             Product product = new Product();
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
+            User currentUser = userDetails.getUser();
 
 
             // Enter in product details in the request
@@ -58,4 +61,72 @@ public class ProductService {
             return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
         }
     }
+
+    public ResponseEntity<Map<String, Object>> getAllProducts(Authentication authentication) {
+        try {
+            UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
+            User currentUser = userDetails.getUser();
+            List<Product> products;
+
+
+            products = productRepo.findByUser(currentUser); // employees and viewrs can only see their products
+
+
+
+
+            return ResponseEntity.status(200).body(Map.of(
+                    "Products of user ", products
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
+        }
+    }
+
+
+    public ResponseEntity<Map<String, Object>> updateProduct(@RequestBody ProductRequest request, int productId, Authentication authentication) {
+        try {
+            UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
+            User currentUser = userDetails.getUser();
+
+            Product product = currentUser.getProducts().get(productId);
+
+            product.setProductName(request.getProductName());
+            product.setProductDescription(request.getProductDescription());
+            product.setProductPrice(request.getProductPrice());
+            product.setProductQuantity(request.getProductQuantity());
+            product.setProductCategory(request.getProductCategory());
+
+            productRepo.save(product);
+
+            return ResponseEntity.status(200).body(Map.of(
+                    "Message", "Updated Prodcut Successfully",
+                    "product", product
+            ));
+
+
+        } catch (RuntimeException e){
+            return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
+        }
+    }
+
+    public ResponseEntity<Map<String, Object>> deleteProduct(int productId, Authentication authentication) {
+        try {
+            UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
+            User currentUser = userDetails.getUser();
+
+                Product selectedProduct = currentUser.getProducts().get(productId);
+                productRepo.delete(selectedProduct);
+
+                return ResponseEntity.status(200).body(Map.of(
+                        "Message", "Product deleted succesfully",
+                        "product", selectedProduct
+                ));
+        } catch(RuntimeException e){
+            return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
+        }
+
+    }
+
+
 }

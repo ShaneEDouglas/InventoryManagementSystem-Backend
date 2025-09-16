@@ -60,6 +60,8 @@ public class User {
     )
     private List<Product> products;
 
+
+
     public Set<Role> getRoles() {
         return roles;
     }
