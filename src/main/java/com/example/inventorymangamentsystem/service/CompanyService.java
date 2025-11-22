@@ -5,14 +5,14 @@ import com.example.inventorymangamentsystem.ResponseObject.ResponseHandler;
 import com.example.inventorymangamentsystem.dto.CompanyRequest;
 import com.example.inventorymangamentsystem.dto.InviteRequest;
 import com.example.inventorymangamentsystem.dto.responsedto.CompanyResponse;
+import com.example.inventorymangamentsystem.dto.responsedto.mappers.UsersInCompany;
 import com.example.inventorymangamentsystem.entity.Company;
 import com.example.inventorymangamentsystem.entity.Role;
 import com.example.inventorymangamentsystem.entity.User;
 import com.example.inventorymangamentsystem.entity.UserDetailsPrinciple;
 import com.example.inventorymangamentsystem.repository.CompanyRepo;
 import com.example.inventorymangamentsystem.repository.UserRepo;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -36,6 +36,17 @@ public class CompanyService {
         this.userRepo = userRepo;
     }
 
+    // Comapny response mapper
+    private UsersInCompany mapUserToCompany(User user) {
+        UsersInCompany dto = new UsersInCompany();
+        dto.setUserId(user.getUserId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setRoles(user.getRoles()); // Gets the roles from the USer eneity
+        return dto;
+    }
+
 
 
     public ResponseEntity<ResponseHandler<CompanyResponse>> createCompany(CompanyRequest companyRequest, Authentication authentication) {
@@ -44,6 +55,9 @@ public class CompanyService {
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
             CompanyResponse companyResponse = new CompanyResponse();
             User currentUser = userDetails.getUser();
+
+            User managedUser = userRepo.findByUserId(currentUser.getUserId())
+                    .orElseThrow( () -> new RuntimeException("User not found"));
 
             /*
              * Here we will hash the company invite key and the hashed key is what will be stored in the database
@@ -59,7 +73,6 @@ public class CompanyService {
             company.setCompanyName(companyRequest.getCompanyName());
 
 
-
             // Check if the company name already exists
             if (companyRepo.findByCompanyName(companyRequest.getCompanyName()).isPresent()) {
                 return ResponseHandler.responseBuilder("Company already exists", HttpStatus.BAD_REQUEST, companyResponse);
@@ -69,7 +82,10 @@ public class CompanyService {
             company.setCompanyEmail(companyRequest.getCompanyEmail());
             company.setCompanyWebsite(companyRequest.getCompanyWebsite());
             company.setOwner(userDetails.getUser());
+            company.setUsers(new ArrayList<>());
+            company.getUsers().add(managedUser);
             company.setInviteKey(hashedInviteKey);
+
 
             companyRepo.save(company);
 
@@ -79,8 +95,14 @@ public class CompanyService {
             companyResponse.setCompanyPhone(company.getCompanyPhone());
             companyResponse.setCompanyEmail(company.getCompanyEmail());
             companyResponse.setCompanyWebsite(company.getCompanyWebsite());
-            companyResponse.setOwner(currentUser);
-            companyResponse.setPeopleInCompany(company.getUsers());
+            companyResponse.setOwner(mapUserToCompany(currentUser));
+
+            List<UsersInCompany> companyUsers = company.getUsers()
+                            .stream()
+                            .map(this::mapUserToCompany)
+                            .toList();
+
+            companyResponse.setPeopleInCompany(companyUsers);
 
 
             currentUser.setCompany(company);
@@ -94,32 +116,32 @@ public class CompanyService {
             e.printStackTrace();
             return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, new CompanyResponse());
         }
-
     }
 
 
     @Transactional
-    public ResponseEntity<Map<String,Object>> updateCompany(CompanyRequest companyRequest, Authentication authentication) {
+    public ResponseEntity<ResponseHandler<CompanyResponse>> updateCompany(CompanyRequest companyRequest, Authentication authentication) {
 
         try {
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
             User currentUser = userDetails.getUser();
+            CompanyResponse companyResponse = new CompanyResponse();
 
             // Grab current company
             Company currentCompany = currentUser.getCompany();
 
             if (currentCompany == null) {
-                return ResponseEntity.status(400).body(Map.of("Error message", "User not part of company"));
+                return ResponseHandler.responseBuilder("company doesn't exits", HttpStatus.BAD_REQUEST, companyResponse);
             }
 
             if (!currentUser.getRoles().contains(Role.ADMIN)) {
-                return ResponseEntity.status(403).body(Map.of("error:", "Only admins can update the company"));
+                return ResponseHandler.responseBuilder("Only admins can update the company", HttpStatus.BAD_REQUEST, companyResponse);
             }
 
             // Check if the user is a part of the comapny
 
             if (!currentCompany.getUsers().contains(userDetails.getUser())) {
-                return ResponseEntity.status(400).body(Map.of("error:", "User is not part of the company"));
+                return ResponseHandler.responseBuilder("User not part of company", HttpStatus.BAD_REQUEST, companyResponse);
             }
 
             // Update the company
@@ -131,28 +153,27 @@ public class CompanyService {
             currentCompany.setOwner(userDetails.getUser());
 
 
+            // Put it in the company repsonse
+            companyResponse.setCompanyId(currentCompany.getCompanyId());
+            companyResponse.setCompanyName(currentCompany.getCompanyName());
+            companyResponse.setCompanyAddress(currentCompany.getCompanyAddress());
+            companyResponse.setCompanyPhone(currentCompany.getCompanyPhone());
+            companyResponse.setCompanyEmail(currentCompany.getCompanyEmail());
+            companyResponse.setCompanyWebsite(currentCompany.getCompanyWebsite());
 
-            return ResponseEntity.status(200).body(Map.of(
-                    "Message", "Updated Company Successfully",
-                    "Company", Map.of(
-                            "CompanyId", currentCompany.getCompanyId(),
-                            "CompanyName", currentCompany.getCompanyName(),
-                            "CompanyEmail", currentCompany.getCompanyEmail(),
-                            "CompanyAddress", currentCompany.getCompanyAddress(),
-                            "CompanyWebsite", currentCompany.getCompanyWebsite(),
-                            "CompanyPhoneNumber", currentCompany.getCompanyPhone()
-                    )
-            ));
+
+
+            return ResponseHandler.responseBuilder("Company updated successfully", HttpStatus.OK, companyResponse);
 
         }
         catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
+            return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
 
     @Transactional
-    public ResponseEntity<Map<String,Object>> joinCompany(InviteRequest request, Authentication authentication) {
+    public ResponseEntity<ResponseHandler<CompanyResponse>> joinCompany(InviteRequest request, Authentication authentication) {
         try {
             /*
              * Here when the  company is already created
@@ -161,30 +182,36 @@ public class CompanyService {
              *
              * the user wanting to input
              * */
+            String CompanyName = request.getCompanyName();
             String inviteKey = request.getInviteKey();
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
+            CompanyResponse companyResponse = new CompanyResponse();
             User user = userDetails.getUser();
 
-            if (companyRepo.findByInviteKey(request.getInviteKey()).isEmpty()) {
-                return ResponseEntity.status(400).body(Map.of("Error: ", "Please enter an Invite Key"));
+
+
+            if (companyRepo.findByCompanyName(CompanyName).isEmpty()) {
+                return ResponseHandler.responseBuilder("Error: Company doesn't exist", HttpStatus.BAD_REQUEST, null);
             }
 
             // Check if the company exist
             Optional<Company> existingCompany = companyRepo.findByCompanyName(request.getCompanyName());
 
             if (existingCompany.isEmpty()) {
-                return ResponseEntity.status(400).body(Map.of("Error: ", "Company does not exist"));
+                return ResponseHandler.responseBuilder("Error: Company doesn't exist", HttpStatus.BAD_REQUEST, null);
             }
 
             // Make sure the user isn't already part of the company
             if (existingCompany.get().getUsers().contains(user)) {
-                return ResponseEntity.status(400).body(Map.of("Error: ", "User is already in the company"));
+                return ResponseHandler.responseBuilder("Error: User is already in the company", HttpStatus.BAD_REQUEST, null);
             }
 
             // Check if the invite key is correct
             if (!passwordEncoder.matches(inviteKey, existingCompany.get().getInviteKey())) {
-                return ResponseEntity.status(401).body(Map.of("Error", "Incorrect password"));
+                return ResponseHandler.responseBuilder("Error: Invalid invite key", HttpStatus.BAD_REQUEST, null);
             }
+
+
 
             // Post company checks, add the current user to the company users (people) list
             Company company = existingCompany.get();
@@ -196,33 +223,45 @@ public class CompanyService {
             user.setRoles(Set.of(Role.EMPLOYEE));
             userRepo.save(user);
 
+            companyResponse.setCompanyId(company.getCompanyId());
+            companyResponse.setCompanyName(company.getCompanyName());
+            companyResponse.setCompanyAddress(company.getCompanyAddress());
+            companyResponse.setCompanyPhone(company.getCompanyPhone());
+            companyResponse.setCompanyEmail(company.getCompanyEmail());
+            companyResponse.setCompanyWebsite(company.getCompanyWebsite());
+            companyResponse.setOwner(mapUserToCompany(company.getOwner()));
 
-            return ResponseEntity.status(201).body(Map.of(
-                    "message", "Company joined successfully",
-                    "User Role",userDetails.getUser().getRoles(),
-                    "Company", Map.of(
-                            "CompanyId", existingCompany.get().getCompanyId(),
-                            "CompanyName", existingCompany.get().getCompanyName(),
-                            "CompanyEmail", existingCompany.get().getCompanyEmail(),
-                            "CompanyAddress", existingCompany.get().getCompanyAddress(),
-                            "CompanyWebsite", existingCompany.get().getCompanyWebsite(),
-                            "CompanyPhoneNumber", existingCompany.get().getCompanyPhone()
-                    )
 
-            ));
+            List<UsersInCompany> companyUsers = company.getUsers()
+                    .stream()
+                    .map(this::mapUserToCompany)
+                    .toList();
+
+            companyResponse.setPeopleInCompany(companyUsers);
+            companyResponse.setRole(user.getRoles());
+
+            return ResponseHandler.responseBuilder("Joined company successfully", HttpStatus.CREATED, companyResponse);
+
+
 
         } catch (RuntimeException e) {
             e.printStackTrace();
-            return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
+
+            return ResponseHandler.responseBuilder("Error:" + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
 
     }
 
 
-    public ResponseEntity<Map<String,Object>> leaveCompany(Authentication authentication) {
+    public ResponseEntity<ResponseHandler<CompanyResponse>> leaveCompany(Authentication authentication) {
 
         try {
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
+
+            CompanyResponse companyResponse = new CompanyResponse();
+
+
+
             User currentUser = userDetails.getUser();
 
 
@@ -231,11 +270,13 @@ public class CompanyService {
             Optional<Company> existingCompany = companyRepo.findByCompanyName(currentCompany.getCompanyName());
 
             if (existingCompany.isEmpty()) {
-                return ResponseEntity.status(400).body(Map.of("Error: ", "Company does not exist"));
+
+                return ResponseHandler.responseBuilder("Error: Company doesn't exist", HttpStatus.BAD_REQUEST, null);
             }
 
             if (!existingCompany.get().getUsers().contains(currentUser)) {
-                return ResponseEntity.status(400).body(Map.of("Error: ", "User is not in the company"));
+
+                return ResponseHandler.responseBuilder("Error: User is not in the company", HttpStatus.BAD_REQUEST, null);
             }
 
             // Leave the company set it to null
@@ -243,43 +284,50 @@ public class CompanyService {
             currentCompany.getUsers().remove(currentUser);
 
 
-            return ResponseEntity.status(201).body(Map.of(
-                    "User Removed Successfully", currentCompany.getUsers()
-            ));
+            return ResponseHandler.responseBuilder("Leaving company successfully for user: " + currentUser.getUserId(), HttpStatus.CREATED, companyResponse);
 
         } catch (RuntimeException e) {
             e.printStackTrace();
-            return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
+            return ResponseHandler.responseBuilder("Error:" + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
 
 
     }
 
 
-    public ResponseEntity<Map<String, Object>> getUsersInCompany(Authentication authentication) {
+    public ResponseEntity<ResponseHandler<CompanyResponse>> getUsersInCompany(Authentication authentication) {
 
         try {
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
             User currentUser = userDetails.getUser();
+            CompanyResponse companyResponse = new CompanyResponse();
             Optional<Company> existingCompany = companyRepo.findByCompanyName(currentUser.getCompany().getCompanyName());
 
             if (existingCompany.isEmpty()) {
-                return ResponseEntity.status(400).body(Map.of("Error: ", "Company does not exist"));
+                return ResponseHandler.responseBuilder("Error: Company doesn't exist", HttpStatus.BAD_REQUEST, null);
             }
 
             if (!existingCompany.get().getUsers().contains(currentUser)) {
-                return ResponseEntity.status(400).body(Map.of("Error: ", "User is not in the company"));
+                return ResponseHandler.responseBuilder("Error: User is not in the company", HttpStatus.BAD_REQUEST, null);
             }
 
             List<User> peopleInCompany = existingCompany.get().getUsers();
 
-            ResponseEntity<Map<String, Object>> people = ResponseEntity.ok(Map.of(
-                    "PeopleInCompany", peopleInCompany
-            ));
 
-            return ResponseHandler.responseBuilder("People in Comapny", HttpStatus.ACCEPTED, people);
+            List<UsersInCompany> peopleInCompanyUsers = peopleInCompany
+                    .stream()
+                    .map(this::mapUserToCompany)
+                    .toList();
+
+            companyResponse.setCompanyName(currentUser.getCompany().getCompanyName());
+            companyResponse.setCompanyId(currentUser.getCompany().getCompanyId());
+            companyResponse.setPeopleInCompany(peopleInCompanyUsers);
+
+
+
+            return ResponseHandler.responseBuilder("getUsersInCompany successfully", HttpStatus.OK, companyResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
+            return ResponseHandler.responseBuilder("Error:" + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
 
 
@@ -288,24 +336,25 @@ public class CompanyService {
 
     }
 
-    public ResponseEntity<Map<String,Object>> deleteCompany(CompanyRequest companyRequest, Authentication authentication) {
+    public ResponseEntity<ResponseHandler<CompanyResponse>> deleteCompany(CompanyRequest companyRequest, Authentication authentication) {
 
 
         try {
             Optional<Company> existingCompany = companyRepo.findByCompanyName(companyRequest.getCompanyName());
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
             User currentUser = userDetails.getUser();
+            CompanyResponse companyResponse = new CompanyResponse();
 
             if (!currentUser.getRoles().contains(Role.ADMIN)) {
-                return ResponseEntity.status(403).body(Map.of("error:", "Only admins can delete the company"));
+                return ResponseHandler.responseBuilder("Error: Only admins can delete the company", HttpStatus.FORBIDDEN, null);
             }
 
             if (existingCompany.isEmpty()) {
-                return ResponseEntity.status(400).body(Map.of("Error: ", "Company does not exist"));
+                return ResponseHandler.responseBuilder("Error: Company doesn't exist", HttpStatus.BAD_REQUEST, null);
             }
 
             if (!existingCompany.get().getUsers().contains(userDetails.getUser())) {
-                return ResponseEntity.status(400).body(Map.of("error:", "User is not part of the company"));
+                return ResponseHandler.responseBuilder("Error: User is not in the company", HttpStatus.BAD_REQUEST, null);
             }
 
 
@@ -313,12 +362,108 @@ public class CompanyService {
             companyRepo.delete(existingCompany.get());
 
 
-            return ResponseEntity.status(200).body(Map.of("message", "Company deleted successfully"));
+            return ResponseHandler.responseBuilder("Company deleted successfully" +companyRequest.getCompanyName(), HttpStatus.OK, companyResponse);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(400).body(Map.of("Error message", e.getMessage()));
+            return ResponseHandler.responseBuilder("Error:" + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
 
     }
+
+    @Transactional
+    public ResponseEntity<ResponseHandler<CompanyResponse>> getMyCompany(Authentication authentication) {
+        try {
+            UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
+            User currentUser = userRepo.findById(userDetails.getUser().getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            CompanyResponse companyResponse = new CompanyResponse();
+            Optional<Company> existingCompany = companyRepo.findByCompanyName(currentUser.getCompany().getCompanyName());
+
+            if (existingCompany.isEmpty()) {
+                return ResponseHandler.responseBuilder("Company not found", HttpStatus.BAD_REQUEST,null);
+            }
+            Company company = currentUser.getCompany();
+
+
+            companyResponse.setCompanyId(company.getCompanyId());
+            companyResponse.setCompanyName(company.getCompanyName());
+            companyResponse.setCompanyAddress(company.getCompanyAddress());
+            companyResponse.setCompanyPhone(company.getCompanyPhone());
+            companyResponse.setCompanyEmail(company.getCompanyEmail());
+            companyResponse.setCompanyWebsite(company.getCompanyWebsite());
+
+
+            if (company.getOwner() != null) {
+                UsersInCompany ownerDto = new UsersInCompany();
+                ownerDto.setUserId(company.getOwner().getUserId());
+                ownerDto.setFirstName(company.getOwner().getFirstName());
+                ownerDto.setLastName(company.getOwner().getLastName());
+                ownerDto.setEmail(company.getOwner().getEmail());
+                ownerDto.setRoles(company.getOwner().getRoles());
+                companyResponse.setOwner(ownerDto);
+            }
+
+
+            List<UsersInCompany> usersList = company.getUsers()
+                    .stream()
+                    .map(user -> {
+                        UsersInCompany dto = new UsersInCompany();
+                        dto.setUserId(user.getUserId());
+                        dto.setFirstName(user.getFirstName());
+                        dto.setLastName(user.getLastName());
+                        dto.setEmail(user.getEmail());
+                        dto.setRoles(user.getRoles());
+                        return dto;
+                    })
+                    .toList();
+            companyResponse.setPeopleInCompany(usersList);
+
+
+            companyResponse.setRole(currentUser.getRoles());
+
+            return ResponseHandler.responseBuilder("Company of user", HttpStatus.OK,companyResponse);
+
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+            return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
+
+
+    public ResponseEntity<ResponseHandler<Map<String, Object>>> regenerateInviteKey(Authentication authentication) {
+        try {
+            UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
+            User currentUser = userRepo.findById(userDetails.getUser().getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            Company company = currentUser.getCompany();
+
+
+            if (company == null) {
+                return ResponseHandler.responseBuilder("Error: Company not found", HttpStatus.BAD_REQUEST, null);
+            }
+
+            // Only the admin can use this to make a new invite key
+            if (!currentUser.getRoles().contains(Role.ADMIN) || currentUser.getRoles().contains(Role.MANAGER)) {
+                return ResponseHandler.responseBuilder("Error: Only admins can regenerate the key", HttpStatus.FORBIDDEN, null);
+            }
+
+            String newInvitekey = generateInviteKey();
+            String hashedKey = passwordEncoder.encode(newInvitekey);
+            company.setInviteKey(hashedKey);
+            companyRepo.save(company);
+
+            return ResponseHandler.responseBuilder(
+                    "Successfully generated new key For Company " + company.getCompanyName(),
+                    HttpStatus.OK,
+                    Map.of(
+                            "New Key", newInvitekey
+                    ));
+
+        } catch (RuntimeException e) {
+            return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        }
+    }
+
 
 
 }

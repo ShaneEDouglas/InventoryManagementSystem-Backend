@@ -63,11 +63,12 @@ public class ProductController {
             @RequestBody ProductRequest request,
             Authentication authentication) {
         try {
-            
+            return productService.deleteProduct(id,authentication);
         } catch (RuntimeException e) {
             System.out.println("Error: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("Message: ", e.getMessage()));
         }
+
     }
 
 }

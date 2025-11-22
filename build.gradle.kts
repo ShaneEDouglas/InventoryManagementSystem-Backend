@@ -19,38 +19,36 @@ repositories {
 }
 
 dependencies {
+    // Lombok
+    compileOnly("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
 
-    // https://mvnrepository.com/artifact/org.projectlombok/lombok
-    implementation("org.projectlombok:lombok:1.18.36")
-    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
+    // JWT
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
-    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson
     implementation("io.jsonwebtoken:jjwt-jackson:0.12.6")
-
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
 
-    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+   // JPA
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-
     implementation("org.springframework.boot:spring-boot-starter-graphql")
-    implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-authorization-server")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql")
-    implementation("org.flywaydb:flyway-sqlserver")
-    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4")
-    runtimeOnly("com.microsoft.sqlserver:mssql-jdbc")
 
+    // Database - Let Spring Boot manage versions
     runtimeOnly("org.postgresql:postgresql")
 
+
+
+    // Explicitly add JBoss Logging with version
+    implementation("org.jboss.logging:jboss-logging:3.6.1.Final")
+
+    // Test dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
-    testImplementation("org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4")
     testImplementation("org.springframework.graphql:spring-graphql-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -61,11 +59,3 @@ tasks.withType<Test> {
 }
 
 
-flyway {
-    url      = "jdbc:postgresql://localhost:5432/inventorydb"
-    user     = "postgres"
-    password = "newpassword123"
-    driver   = "org.postgresql.Driver"
-    // (optional) Automatically clean if validation fails:
-    cleanOnValidationError = true
-}

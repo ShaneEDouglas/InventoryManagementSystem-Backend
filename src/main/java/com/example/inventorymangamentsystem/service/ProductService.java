@@ -89,7 +89,11 @@ public class ProductService {
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
             User currentUser = userDetails.getUser();
 
-            Product product = currentUser.getProducts().get(productId);
+            Product product = productRepo.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+
+            if (product.getUser().getUserId() != currentUser.getUserId()) {
+                return ResponseEntity.status(403).body(Map.of("Error", "Not authorized to update this product"));
+            }
 
             product.setProductName(request.getProductName());
             product.setProductDescription(request.getProductDescription());
@@ -115,7 +119,7 @@ public class ProductService {
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
             User currentUser = userDetails.getUser();
 
-                Product selectedProduct = currentUser.getProducts().get(productId);
+                Product selectedProduct = productRepo.findById(productId).orElseThrow( () -> new RuntimeException("Product not found"));
                 productRepo.delete(selectedProduct);
 
                 return ResponseEntity.status(200).body(Map.of(

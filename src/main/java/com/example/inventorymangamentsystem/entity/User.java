@@ -1,7 +1,9 @@
 package com.example.inventorymangamentsystem.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.HashSet;
 import java.util.List;
@@ -9,6 +11,7 @@ import java.util.Set;
 
 @Entity
 @Table(name= "users")
+@EqualsAndHashCode(exclude = {"company", "products"})
 @Data
 public class User {
     @Id
@@ -21,8 +24,9 @@ public class User {
     protected String phoneNumber;
     protected String profilePicture;
 
-    @ManyToOne
-    @JoinColumn(name = "company_id",nullable = false)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id",nullable = true)
+    @JsonIgnore
     protected Company company;
 
 
