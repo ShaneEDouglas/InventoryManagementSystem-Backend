@@ -1,8 +1,10 @@
 package com.example.inventorymangamentsystem.controllers;
 
 
+import com.example.inventorymangamentsystem.ResponseObject.ResponseHandler;
 import com.example.inventorymangamentsystem.dto.ProductRequest;
 import com.example.inventorymangamentsystem.dto.RegisterRequest;
+import com.example.inventorymangamentsystem.dto.responsedto.ProductResponse;
 import com.example.inventorymangamentsystem.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,41 +12,42 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/product")
 public class ProductController {
 
     @Autowired
     private ProductService productService;
-    private int productId;
 
-    @PostMapping("/createproduct")
-    public ResponseEntity<Map<String,Object>> createProduct(@RequestBody ProductRequest request, Authentication authentication) {
+
+    @PostMapping("/create")
+    public ResponseEntity<ResponseHandler<ProductResponse>> createProduct(@RequestBody ProductRequest request, Authentication authentication) {
         try {
             return productService.createProduct(request,authentication);
         } catch (RuntimeException e) {
             System.out.println("Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("Message: ", e.getMessage()));
+            return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
 
         }
 
     }
 
-    @GetMapping("/getproducts")
-    public ResponseEntity<Map<String,Object>> getProducts(Authentication authentication) {
+    @GetMapping("/get")
+    public ResponseEntity<ResponseHandler<List<ProductResponse>>> getProducts(Authentication authentication) {
         try {
             return productService.getAllProducts(authentication);
         } catch (RuntimeException e) {
              System.out.println("Error: " + e.getMessage());
-             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("Message: ", e.getMessage()));
+             return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
 
 
-    @PutMapping("/updateprodcut/{id}")
-    public ResponseEntity<Map<String,Object>> updateProduct(
+    @PutMapping("/update/{id}")
+    public ResponseEntity<ResponseHandler<ProductResponse>> updateProduct(
             
             @RequestBody ProductRequest request, 
             @PathVariable int id,
@@ -53,22 +56,33 @@ public class ProductController {
             return productService.updateProduct(request,id,authentication);
         } catch (RuntimeException e) {
             System.out.println("Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("Message: ", e.getMessage()));
+            return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
 
-    @DeleteMapping("/deletepoduct/{id}")
-    public ResponseEntity<Map<String,Object>> deleteProduct(
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ResponseHandler<ProductResponse>> deleteProduct(
             @PathVariable int id,
-            @RequestBody ProductRequest request,
             Authentication authentication) {
         try {
             return productService.deleteProduct(id,authentication);
         } catch (RuntimeException e) {
             System.out.println("Error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("Message: ", e.getMessage()));
+            return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
 
+    }
+
+    @PatchMapping("/stock/{id}")
+    public ResponseEntity<ResponseHandler<ProductResponse>> adjustStock(
+            @PathVariable int id,
+            @RequestParam int quantity, // Use positive for add, negative for remove
+            Authentication authentication) {
+        try {
+            return productService.adjustStock(id, quantity, authentication);
+        } catch (RuntimeException e) {
+            return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        }
     }
 
 }

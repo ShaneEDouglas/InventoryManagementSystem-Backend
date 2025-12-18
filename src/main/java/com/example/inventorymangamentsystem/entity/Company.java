@@ -27,6 +27,7 @@ public class Company {
     protected String companyWebsite;
     protected String inviteKey;
 
+
     /*
     * Every user is allowed to have multiple companies and cmpanies share a "many to one" relationship
     * with a single owenr (i.e company 1 and comapny 2 is owned by owner 1, etc.
@@ -44,6 +45,8 @@ public class Company {
     @JsonIgnore
     protected List<User> users = new ArrayList<>();
 
+    @OneToMany(mappedBy = "company",fetch = FetchType.LAZY)
+    protected List<Product> products;
 
 
 

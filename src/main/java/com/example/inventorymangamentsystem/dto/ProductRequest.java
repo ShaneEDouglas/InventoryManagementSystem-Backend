@@ -9,6 +9,7 @@ public class ProductRequest {
     protected double productPrice;
     protected int productQuantity;
     protected String productCategory;
+    protected String productImageUrl;
 
     public String getProductName() {
         return productName;

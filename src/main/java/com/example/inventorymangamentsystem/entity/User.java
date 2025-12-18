@@ -57,7 +57,7 @@ public class User {
     private Set<Role> roles = new HashSet<>();
 
     // Gives a one to many relationship to the products
-    @OneToMany(mappedBy = "user",
+    @OneToMany(mappedBy = "createdBy",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
             fetch = FetchType.LAZY

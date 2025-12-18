@@ -12,15 +12,39 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected int productId;
+
     protected String productName;
     protected String productDescription;
     protected double productPrice;
     protected int productQuantity;
     protected String productCategory;
+    protected String productImageUrl;
+
 
     @ManyToOne
-    @JoinColumn(name = "user_id",nullable = false )
-    public User user;
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
+
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
+
+    public Company getCompany() {
+        return company;
+    }
+
+    public void setCompany(Company company) {
+        this.company = company;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
 
     public int getProductId() {
         return productId;
@@ -70,11 +94,5 @@ public class Product {
         this.productCategory = productCategory;
     }
 
-    public User getUser() {
-        return user;
-    }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
 }
