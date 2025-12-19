@@ -6,7 +6,7 @@ InvenFlow is a robust, multi-tenant backend built with **Spring Boot** designed 
 
 ###  Security & Authentication
 * **HttpOnly Cookies:** Secure session management that prevents XSS attacks.
-* **RBAC (Role-Based Access Control):** distinct permissions for **ADMIN**, **MANAGER**, **EMPLOYEE**, and  **VIEWER".
+* **RBAC (Role-Based Access Control):** distinct permissions for **ADMIN**, **MANAGER**, **EMPLOYEE**, and  **VIEWER**".
 * **Invitation System:** Admins can generate unique **Invite Keys** to onboard new employees securely.
 
 ###  Multi-Tenancy and privilege isolation
