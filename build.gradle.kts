@@ -52,6 +52,9 @@ dependencies {
     testImplementation("org.springframework.graphql:spring-graphql-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    //Swagger doc ui
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.14")
 }
 
 tasks.withType<Test> {

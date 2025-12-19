@@ -24,6 +24,7 @@ import java.util.*;
 import static com.example.inventorymangamentsystem.utils.inviteKeyUtil.generateInviteKey;
 
 @Service
+@Transactional
 public class CompanyService {
 
     private final CompanyRepo companyRepo;
@@ -72,7 +73,6 @@ public class CompanyService {
 
             company.setCompanyName(companyRequest.getCompanyName());
 
-
             // Check if the company name already exists
             if (companyRepo.findByCompanyName(companyRequest.getCompanyName()).isPresent()) {
                 return ResponseHandler.responseBuilder("Company already exists", HttpStatus.BAD_REQUEST, companyResponse);
@@ -103,7 +103,6 @@ public class CompanyService {
                             .toList();
 
             companyResponse.setPeopleInCompany(companyUsers);
-
 
             currentUser.setCompany(company);
             currentUser.setRoles(Set.of(Role.ADMIN));
@@ -160,8 +159,6 @@ public class CompanyService {
             companyResponse.setCompanyPhone(currentCompany.getCompanyPhone());
             companyResponse.setCompanyEmail(currentCompany.getCompanyEmail());
             companyResponse.setCompanyWebsite(currentCompany.getCompanyWebsite());
-
-
 
             return ResponseHandler.responseBuilder("Company updated successfully", HttpStatus.OK, companyResponse);
 
@@ -299,8 +296,10 @@ public class CompanyService {
 
         try {
             UserDetailsPrinciple userDetails = (UserDetailsPrinciple) authentication.getPrincipal();
-            User currentUser = userDetails.getUser();
+            int currentUserId = userDetails.getUser().getUserId();
+            User currentUser = userRepo.findById(currentUserId).get();
             CompanyResponse companyResponse = new CompanyResponse();
+
             Optional<Company> existingCompany = companyRepo.findByCompanyName(currentUser.getCompany().getCompanyName());
 
             if (existingCompany.isEmpty()) {
@@ -319,9 +318,26 @@ public class CompanyService {
                     .map(this::mapUserToCompany)
                     .toList();
 
+            // Put in owner
+            UsersInCompany ownrDto = new UsersInCompany();
+            if (currentUser.getCompany().getOwner() != null) {
+                UsersInCompany ownerDto = new UsersInCompany();
+                ownerDto.setUserId(currentUser.getCompany().getOwner().getUserId());
+                ownerDto.setFirstName(currentUser.getCompany().getOwner().getFirstName());
+                ownerDto.setLastName(currentUser.getCompany().getOwner().getLastName());
+                ownerDto.setEmail(currentUser.getCompany().getOwner().getEmail());
+                ownerDto.setRoles(currentUser.getCompany().getOwner().getRoles());
+                companyResponse.setOwner(ownerDto);
+            }
+
             companyResponse.setCompanyName(currentUser.getCompany().getCompanyName());
+            companyResponse.setCompanyAddress(currentUser.getCompany().getCompanyAddress());
+            companyResponse.setCompanyPhone(currentUser.getCompany().getCompanyPhone());
+            companyResponse.setCompanyEmail(currentUser.getCompany().getCompanyEmail());
+            companyResponse.setCompanyWebsite(currentUser.getCompany().getCompanyWebsite());
             companyResponse.setCompanyId(currentUser.getCompany().getCompanyId());
             companyResponse.setPeopleInCompany(peopleInCompanyUsers);
+            companyResponse.setRole(currentUser.getRoles());
 
 
 

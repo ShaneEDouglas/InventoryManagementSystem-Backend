@@ -6,6 +6,8 @@ import com.example.inventorymangamentsystem.dto.ProductRequest;
 import com.example.inventorymangamentsystem.dto.RegisterRequest;
 import com.example.inventorymangamentsystem.dto.responsedto.ProductResponse;
 import com.example.inventorymangamentsystem.service.ProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +19,16 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/product")
+@Tag(name = "Product")
 public class ProductController {
 
     @Autowired
     private ProductService productService;
 
-
+    @Operation(
+            description = "Post endpoint for creating a new product",
+            summary = "Must have the role of admin,manager, or employee to access this endpoint"
+    )
     @PostMapping("/create")
     public ResponseEntity<ResponseHandler<ProductResponse>> createProduct(@RequestBody ProductRequest request, Authentication authentication) {
         try {
@@ -34,7 +40,9 @@ public class ProductController {
         }
 
     }
-
+    @Operation(
+            description = "Get endpoint fro retrieving "
+    )
     @GetMapping("/get")
     public ResponseEntity<ResponseHandler<List<ProductResponse>>> getProducts(Authentication authentication) {
         try {
@@ -47,6 +55,9 @@ public class ProductController {
 
 
     @PutMapping("/update/{id}")
+    @Operation(
+            description = "Put method to update the selected product"
+    )
     public ResponseEntity<ResponseHandler<ProductResponse>> updateProduct(
             
             @RequestBody ProductRequest request, 
@@ -60,6 +71,9 @@ public class ProductController {
         }
     }
 
+    @Operation(
+            description = "Delete method to delete the selected product"
+    )
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ResponseHandler<ProductResponse>> deleteProduct(
             @PathVariable int id,
@@ -73,10 +87,13 @@ public class ProductController {
 
     }
 
+    @Operation(
+            description = "Patch method to update the stoc number of a selected product"
+    )
     @PatchMapping("/stock/{id}")
     public ResponseEntity<ResponseHandler<ProductResponse>> adjustStock(
             @PathVariable int id,
-            @RequestParam int quantity, // Use positive for add, negative for remove
+            @RequestParam int quantity,
             Authentication authentication) {
         try {
             return productService.adjustStock(id, quantity, authentication);

@@ -14,7 +14,6 @@ import java.util.List;
 @Table(name = "Companies")
 @EqualsAndHashCode(exclude = {"users", "owner"})
 @Data
-
 public class Company {
 
     @Id

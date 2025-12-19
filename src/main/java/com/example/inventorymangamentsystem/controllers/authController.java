@@ -4,6 +4,8 @@ package com.example.inventorymangamentsystem.controllers;
 import com.example.inventorymangamentsystem.dto.LoginRequest;
 import com.example.inventorymangamentsystem.dto.RegisterRequest;
 import com.example.inventorymangamentsystem.entity.User;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Auth")
 public class authController {
 
 
@@ -27,6 +30,9 @@ public class authController {
         return Map.of("Status: ", "Auth Works");
     }
 
+    @Operation(
+            description = "Post endpoint for registering a new user"
+    )
     @PostMapping("/register")
     public ResponseEntity<Map<String,Object>> register( @RequestBody RegisterRequest request) {
         try {
@@ -38,7 +44,9 @@ public class authController {
         }
 
     }
-
+    @Operation(
+            description = "Post endpoint for logging in a current user"
+    )
     @PostMapping("/login")
     public ResponseEntity<Map<String,Object>> login(@RequestBody LoginRequest request) {
         try {
@@ -49,7 +57,9 @@ public class authController {
         }
     }
 
-
+    @Operation(
+            description = "Post endpoint for logging ou by expiring the JWT"
+    )
     @PostMapping("/logout")
     public ResponseEntity<Map<String,Object>> logout() {
         try {
@@ -60,7 +70,9 @@ public class authController {
         }
     }
 
-
+    @Operation(
+            description = "Get endpoint for retrieving current logged in user data from the JWT"
+    )
     @GetMapping("/me")
     public ResponseEntity<Map<String,Object>> getMe(Authentication authentication) {
         try {

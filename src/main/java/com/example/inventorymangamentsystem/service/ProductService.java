@@ -92,11 +92,11 @@ public class ProductService {
             int userId  = userDetails.getUserId();
             User currentUser = userRepo.findByUserId(userId).orElseThrow( () -> new RuntimeException("User Not Found"));
             List<Product> products;
-            ProductResponse productResponse = new ProductResponse();
-            List<ProductResponse> productResponses;
 
             // If admin or manager, retrive all products
-            if (currentUser.getRoles().contains(Role.ADMIN) || currentUser.getRoles().contains(Role.MANAGER)) {
+            if (currentUser.getRoles().contains(Role.ADMIN) ||
+                    currentUser.getRoles().contains(Role.MANAGER) ||
+                    currentUser.getRoles().contains(Role.EMPLOYEE)) {
                 products = productRepo.findByCompany(currentUser.getCompany());
 
                 List<ProductResponse> productsInCompany = products
@@ -120,26 +120,8 @@ public class ProductService {
 
             }
 
-            // If employee, retrieve products you created
-
-            if (currentUser.getRoles().contains(Role.EMPLOYEE)) {
-
-                products = productRepo.findByCreatedBy(currentUser);
-                List<ProductResponse> productsInCompany = products
-                        .stream()
-                        .map(productMapper::toResponse)
-                        .toList();
-
-                return ResponseHandler.responseBuilder("Products created by "
-                        + currentUser.getFirstName()
-                        + currentUser.getLastName(),
-                        HttpStatus.OK,
-                        productsInCompany);
-            }
 
             return ResponseHandler.responseBuilder("Not authorized", HttpStatus.FORBIDDEN, null);
-
-
 
         } catch (Exception e) {
             return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
@@ -207,7 +189,7 @@ public class ProductService {
     }
 
 
-    // For updating indvidual pieces of data( adjusting stock of a product
+    // For updating individual pieces of data( adjusting stock of a product
 
     public ResponseEntity<ResponseHandler<ProductResponse>> adjustStock(int productId, int quantity, Authentication authentication) {
         try {
@@ -220,10 +202,10 @@ public class ProductService {
             Product product = productRepo.findByCompanyAndProductId(userCompany, productId)
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
-            int newQuantity = product.getProductQuantity() + quantity;
+            int newQuantity = quantity;
 
             if (newQuantity < 0) {
-                return ResponseHandler.responseBuilder("Insufficient stock", HttpStatus.BAD_REQUEST, null);
+                return ResponseHandler.responseBuilder("Insufficient stock number", HttpStatus.BAD_REQUEST, null);
             }
 
             product.setProductQuantity(newQuantity);
@@ -235,6 +217,4 @@ public class ProductService {
             return ResponseHandler.responseBuilder(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, null);
         }
     }
-
-
 }
