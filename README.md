@@ -21,7 +21,7 @@ InvenFlow is a robust, multi-tenant backend built with **Spring Boot** designed 
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 * **Language:** Java 21+
 * **Framework:** Spring Boot 3
@@ -31,6 +31,18 @@ InvenFlow is a robust, multi-tenant backend built with **Spring Boot** designed 
 
 ---
 
+## Application Architecture
+
+## 1.  Database Design
+The database is designed for a multi-tenancy architecture. Every 'product' is connected to a company with a Foreign Key to ensure isolation of inventory ownership between companies. The schema also includes foreign keys for audit trails (tracking which employee is accountable for adding a specific product).
+
+![Entity Relationship Diagram](ER.png)
+
+## 2. Secure Auth Flow
+Security is handled through JWTs that are stored in **HTTP-only cookies**. The diagram below shows the relationship during Registration, Login, and Logout
+
+![Authentication Sequence](AuthFlow.png)
+
 ## API Documentation
 
 The API is fully documented using Swagger UI.
@@ -39,18 +51,39 @@ http://localhost:8080/swagger-ui/index.html
 
 ### Core Endpoints
 
+#### Authentication
+#### Authentication
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | Secure login with cookie generation | Public |
-| `POST` | `/api/company/join` | Join a company using an Invite Key | User |
-| `GET` | `/api/product/get` | Retrieve all company inventory | Employee/Admin |
-| `PATCH` | `/api/product/stock/{id}` | Adjust stock levels | Admin/Manager |
-| `DELETE` | `/api/company/delete` | Delete company data | **Admin Only** |
+| `POST` | `/api/auth/register` | Register a new user account and generates HttpOnly Cookie | Public |
+| `POST` | `/api/auth/login` | Secure login (Generates HttpOnly Cookie) | Public |
+| `POST` | `/api/auth/logout` | Invalidates the session cookie | Authenticated |
+| `GET`  | `/api/auth/me` | Grabs the current logged in user data from the cookie| Authenticated|
+
+#### Company Management
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/company/create` | Create a new company (User becomes Owner) | User (No Company) |
+| `POST` | `/api/company/join` | Join a company using an Invite Key | User (No Company) |
+| `POST` | `/api/company/generate-key` | Generate a unique invite key for onboarding | **Admin Only** |
+| `GET` | `/api/company/users` | View all employees in the company | Admin/Manager |
+| `DELETE` | `/api/company/leave` | Leave the current company | User |
+| `DELETE` | `/api/company/delete` | Delete the entire company and data | **Admin Only** |
+
+
+#### Inventory & Products
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/product/create` | Add a new product to inventory | Admin/Manager |
+| `GET` | `/api/product/get` | Retrieve all company inventory | All Roles |
+| `GET` | `/api/product/{id}` | Get details of a single product | All Roles |
+| `PATCH` | `/api/product/stock/{id}` | Adjust stock levels (Restock/Audit) | Admin/Manager |
+| `PATCH` | `/api/product/update/{id}` | Update product details (Price, Name) | Admin/Manager |
+| `DELETE` | `/api/product/delete/{id}` | Remove a product from inventory | Admin/Manager |
 
 ---
-and more to be listed
 
-## Getting Started 💻
+## Getting Started 
 
 * **Clone the Repo in your choice of Java-based IDE**
 * **Update the "application. properties" file with your PostgreSQL database credentials**
