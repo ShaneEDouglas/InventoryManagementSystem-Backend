@@ -3,7 +3,7 @@
 InvenFlow is a robust, multi-tenant backend built with **Spring Boot** designed to manage inventory for small to medium-sized businesses. It features secure Role-Based Access Control (RBAC), company-wide data isolation, and comprehensive inventory tracking.
 
 ## Demo Video
-[![Watch the Demo]()]()
+[![InvenFlow Demo](https://img.youtube.com/vi/izbA7uzoY00/maxresdefault.jpg)](https://youtu.be/izbA7uzoY00)
 > *Click here to watch a live demo of the API architecture and core features.*
 
 ## Key Features
